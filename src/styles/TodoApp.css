@@ -1,4 +1,4 @@
-/* Base styles */
+
 .todo-app {
   min-height: 100vh;
   background-color: #f3f4f6;
@@ -14,8 +14,6 @@
   margin: 0 auto;
   overflow: hidden;
 }
-
-/* Form styles */
 .todo-form {
   padding: 1.5rem;
   border-bottom: 1px solid #e5e7eb;
@@ -85,8 +83,6 @@
 .btn-primary:hover {
   background-color: #2563eb;
 }
-
-/* Todo list styles */
 .todo-list {
   padding: 1.5rem;
 }
@@ -154,8 +150,6 @@
   color: #dc2626;
   border-color: #fecaca;
 }
-
-/* Responsive adjustments */
 @media (max-width: 640px) {
   .todo-container {
     margin: 0 1rem;
