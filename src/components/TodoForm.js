@@ -1,113 +1,85 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 import { addTodo, updateTodo } from "../redux/actions";
+import { getTodoValidationSchema, getInitialValues } from "../utils/validators";
 import "../styles/TodoApp.css";
 
 const TodoForm = ({ editingTodo, setEditingTodo }) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [errors, setErrors] = useState({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const dispatch = useDispatch();
+  const todos = useSelector((state) => state.todos);
 
+  const validationSchema = getTodoValidationSchema(todos, editingTodo?.id || null);
+  const initialValues = getInitialValues(editingTodo);
 
-  useEffect(() => {
+  const handleSubmit = (values, { resetForm }) => {
     if (editingTodo) {
-      setName(editingTodo.name);
-      setEmail(editingTodo.email);
-    }
-  }, [editingTodo]);
-
-  const validate = () => {
-    let tempErrors = {};
-    if (!name.trim()) {
-      tempErrors.name = "Name is required";
-    }
-    if (!email.trim()) {
-      tempErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      tempErrors.email = "Invalid email format";
-    }
-    setErrors(tempErrors);
-    return Object.keys(tempErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsSubmitted(true);
-
-    if (!validate()) return; 
-
-    if (editingTodo) {
-      dispatch(updateTodo({ id: editingTodo.id, name, email }));
+      dispatch(updateTodo({ id: editingTodo.id, ...values }));
       setEditingTodo(null);
     } else {
-      dispatch(addTodo({ id: Date.now(), name, email }));
+      dispatch(addTodo({ id: Date.now(), ...values }));
     }
-
-    setName("");
-    setEmail("");
-    setErrors({});
-    setIsSubmitted(false);
+    resetForm();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="todo-form">
-      <h2>{editingTodo ? 'Edit Todo' : 'Add New Todo'}</h2>
-      <div className="form-group">
-        <label htmlFor="name">Name</label>
-        <input
-          id="name"
-          type="text"
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-           
-            if (errors.name) {
-              setErrors(prev => ({
-                ...prev,
-                name: e.target.value.trim() ? '' : 'Name is required'
-              }));
-            }
-          }}
-          placeholder="Enter name"
-          className={`form-control ${isSubmitted && errors.name ? 'border-red-300' : ''}`}
-        />
-        {isSubmitted && errors.name && (
-          <div className="error-message">{errors.name}</div>
-        )}
-      </div>
-      <div className="form-group">
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-          
-            if (errors.email) {
-              setErrors(prev => ({
-                ...prev,
-                email: !e.target.value.trim() ? 'Email is required' : 
-                       !/\S+@\S+\.\S+/.test(e.target.value) ? 'Invalid email format' : ''
-              }));
-            }
-          }}
-          placeholder="Enter email"
-          className={`form-control ${isSubmitted && errors.email ? 'border-red-300' : ''}`}
-        />
-        {isSubmitted && errors.email && (
-          <div className="error-message">{errors.email}</div>
-        )}
-      </div>
-      <button
-        type="submit"
-        className="btn btn-primary"
+    <div className="todo-form">
+      <h2>{editingTodo ? "Edit Todo" : "Add New Todo"}</h2>
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}
+        enableReinitialize
+        context={{
+          todos,
+          editingId: editingTodo?.id || null,
+        }}
       >
-        {editingTodo ? 'Update Todo' : 'Add Todo'}
-      </button>
-    </form>
+        {({ errors, touched }) => (
+          <Form>
+            <div className="form-group">
+              <label htmlFor="name">Name</label>
+              <Field
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Enter name"
+                className={`form-control ${
+                  errors.name && touched.name ? "border-red-300" : ""
+                }`}
+              />
+              <ErrorMessage
+                name="name"
+                component="div"
+                className="error-message"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <Field
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter email"
+                className={`form-control ${
+                  errors.email && touched.email ? "border-red-300" : ""
+                }`}
+              />
+              <ErrorMessage
+                name="email"
+                component="div"
+                className="error-message"
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary">
+              {editingTodo ? "Update Todo" : "Add Todo"}
+            </button>
+          </Form>
+        )}
+      </Formik>
+    </div>
   );
 };
 
